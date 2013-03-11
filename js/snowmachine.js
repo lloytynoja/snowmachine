@@ -7,30 +7,34 @@ ns.main = function main() {
 	ns.ctx = ns.canvas.getContext("2d");
 	
 	ns.f = new ns.flake(100, -2, 5);	
-
-	ns.draw(ns.f);		
-	setInterval(ns.f.move,500);
+	//ns.draw(ns.f);		
+	setInterval(function(){ ns.draw(ns.f); },100);
 }
 
 ns.flake = function (x, y, velocity){
+
 	this.x = x;
 	this.y = y;
 	this.velocity = velocity;
-	
+		
 	this.move = function() {
-		ns.f.y = ns.f.y + ns.f.velocity;
-		console.log(ns.f);
-		console.log(this.y);
+		y = y + velocity;
+	}
+	this.getY = function() {
+		return y;
 	}
 }
 
 
 ns.draw = function draw(f) {
+
+	f.move();
+	console.log(f.getY());
 	ns.ctx.clearRect(0, 0, ns.canvas.width, ns.canvas.height);
 	ns.ctx.beginPath();
 	ns.ctx.lineWidth="3";
-	ns.ctx.strokeStyle="green"; // Green path
-	ns.ctx.moveTo(10,10);
-	ns.ctx.lineTo(200,200);
+	ns.ctx.strokeStyle="white";
+	ns.ctx.moveTo(10,f.getY());
+	ns.ctx.lineTo(13,f.getY());
 	ns.ctx.stroke();				
 }
