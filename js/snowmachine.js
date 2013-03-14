@@ -1,20 +1,30 @@
 /* Snowmachine */
 
 var ns = {};
-
+var fps = 40;
+var now;
+var then = Date.now();
+var interval = 1000/fps;
+var delta;
 
 ns.flakes = [];
 
 ns.main = function main() {
-	ns.canvas = document.getElementById("ns-canvas");			
+	ns.canvas = document.getElementById("ns-canvas");		
+	ns.canvas.setAttribute('width', 800);
+	ns.canvas.setAttribute('height', '500');	
 	ns.ctx = ns.canvas.getContext("2d");
+	ns.counter = document.getElementById("flake-counter");
 	
 	/* init properties */
-	ns.props = new ns.properties(10, 10, 10);
-	ns.createFlakes(ns.props.getFlakesPerRound());
+	ns.props = new ns.properties(4, 2, 1, 10);
+	ns.createFlakes(ns.props);
 
+	//console.log(ns.flakes);
 	/* start animation */
-	window.requestAnimationFrame(ns.draw(ns.f, ns.props));
+	ns.draw();
+	//window.requestAnimationFrame(ns.draw(ns.flakes, ns.props));
+	//ns.draw(ns.flakes, ns.props);
 	}
 
 ns.flake = function (x, y, velocity){
@@ -24,17 +34,23 @@ ns.flake = function (x, y, velocity){
 	this.velocity = velocity;
 		
 	this.move = function() {
-		y = y + velocity;
-	}
+		//console.log("move() called");
+		this.y = this.y + this.velocity;
+		//console.log("move() called " + this.y);
+		}
 	this.getY = function() {
-		return y;
-	}
+		return this.y;
+	};
+	this.getX = function() {
+		return this.x;
+	};
 }
 
-ns.properties = function (maxVelocity, flakesPerRound, minRate) {
+ns.properties = function (maxVelocity, minVelocity, flakesPerRound, minRate) {
 
 	var counter = 0;
 	this.maxVelocity = maxVelocity;
+	this.minVelocity = minVelocity;
 	this.flakesPerRound = flakesPerRound;
 	this.minRate = minRate;
 	
@@ -72,39 +88,58 @@ ns.properties = function (maxVelocity, flakesPerRound, minRate) {
 	this.getMaxVelocity = function () {
 		return maxVelocity;
 	}
+	this.setMinVelocity = function (velocity) {
+		minVelocity = velocity;
+	}
+	this.getMinVelocity = function () {
+		return minVelocity;
 }
+	}
 
-ns.removeFlakes = function (flakes) {
+ns.updateFlakeCounter = function () {
+	ns.counter.innerHTML = ns.flakes.length;
+}
+ns.removeFlakes = function () {
 
 	var newFlakeArr = []
 
-	for (var flake : flakes) {
-		if (flake.getY < ns.canvas.height) {
-			newFlakeArr.push(flake);
+	for (var i = 0; i < ns.flakes.length; i++) {
+		if (ns.flakes[i].getY() < ns.canvas.height) {
+			newFlakeArr.push(ns.flakes[i]);
 		}
 	}	
-	flakes = newFlakeArr;
+	ns.flakes = newFlakeArr;
 }
 
-ns.createFlakes = function (amount) {
-
-	for (var i = 0; i < amount; i++) {
-		ns.flakes.push(new ns.flake(Math.random() * ns.canvas.width, -2, Math.random() * ns.maxVelocity));
+ns.createFlakes = function (props) {
+	for (var i = 0; i < props.getFlakesPerRound(); i++) {
+		var velocity = Math.random() * props.getMaxVelocity();
+		ns.flakes.push(new ns.flake(
+									Math.random() * ns.canvas.width, 
+									-2, 
+									(velocity > props.getMinVelocity()) ? velocity : velocity + props.getMinVelocity()));
 	}
 }
 
-/* luuppaa taulukko ja pirrä sisältö */
-ns.draw = function draw(f, props) {
-	setTimeout(function() {
-		f.move();
-		console.log(f.getY());
+ns.draw = function () {
+
+    now = Date.now();
+    delta = now - then;
+     
+    if (delta > interval) {
+		console.log("hep");
+        then = now - (delta % interval);
+		ns.removeFlakes();
+		ns.createFlakes(ns.props);
+		ns.updateFlakeCounter();
 		ns.ctx.clearRect(0, 0, ns.canvas.width, ns.canvas.height);
-		ns.ctx.beginPath();
-		ns.ctx.lineWidth="3";
-		ns.ctx.strokeStyle="white";
-		ns.ctx.moveTo(10,f.getY());
-		ns.ctx.lineTo(13,f.getY());
-		ns.ctx.stroke();
-		window.requestAnimationFrame(ns.draw(f));
-	}, 1000 / 25);
+		for (var i = 0; i < ns.flakes.length; i++) {
+			ns.flakes[i].move();
+			ns.ctx.beginPath();
+			ns.ctx.arc(ns.flakes[i].getX(), ns.flakes[i].getY(), 4, 0, 2 * Math.PI, false);
+			ns.ctx.fillStyle = 'white';
+			ns.ctx.fill();
+		}
+	}
+	window.requestAnimationFrame(ns.draw);			
 }
