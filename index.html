@@ -1,11 +1,18 @@
 <html>
 	<head>
+		 <link rel="stylesheet" href="http://code.jquery.com/ui/1.10.1/themes/base/jquery-ui.css" />
+<script src="http://code.jquery.com/jquery-1.9.1.js"></script>
+<script src="http://code.jquery.com/ui/1.10.1/jquery-ui.js"></script>
 		<script src="js/snowmachine.js"></script>
-		<link rel="stylesheet" type="text/css" href="css/styles.css">
+
+		<link rel="stylesheet" type="text/css" href="css/styles.css">		
 	</head>
 	<body onLoad="ns.main()">
-		<canvas id="ns-canvas">
-		</canvas>
-		<p>Flakes <span id="flake-counter">0</span></p>
+		<div id="top">
+			<canvas id="ns-canvas"></canvas>
+		</div>
+		<div id="flake-amount"><span class="flakes-on-canvas">| Flakes on canvas: </span><span id="flake-counter">0</span></div>
+		<div id="new-flakes"><span class="flakes-per-frame">New flakes / frame: </span><span id="flake-slider">1</span></div>	
+		<div id="slider"></div>			
 	</body>	
 </html>

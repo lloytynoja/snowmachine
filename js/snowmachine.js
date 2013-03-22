@@ -1,31 +1,68 @@
-/* Snowmachine */
+/* Snowmachine v.1.0
+ * 	
+ * Author: Lasse Löytynoja
+ * Date: 20.3.2013
+ * 
+ * Purpose of this application was mainly to learn few things on JavaScript: 
+ * creating a app that uses a namespace pattern and animation on the HTML 5 
+ * canvas component using requestAnimationFrame. 
+*/
 
-var ns = {};
-var fps = 40;
-var now;
-var then = Date.now();
-var interval = 1000/fps;
-var delta;
+/* namespace: if object ns exists, use it, otherwise create new empty object */
+var ns = ns || {};
 
+ns.fps = 40;
+ns.now;
+ns.then = Date.now();
+ns.interval = 1000 / ns.fps;
+ns.delta;
 ns.flakes = [];
 
+/* for browser support */
+(function() {
+  var requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+                              window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
+  window.requestAnimationFrame = requestAnimationFrame;
+})();
+
 ns.main = function main() {
+
+	/* get the elements */
 	ns.canvas = document.getElementById("ns-canvas");		
-	ns.canvas.setAttribute('width', 800);
-	ns.canvas.setAttribute('height', '500');	
-	ns.ctx = ns.canvas.getContext("2d");
 	ns.counter = document.getElementById("flake-counter");
+	ns.slider = document.getElementById("flake-slider");
+	ns.ctx = ns.canvas.getContext("2d");
+
+	/* canvas size must be set as attributes... */
+	var canvasWidth = window.innerWidth - 0.04 * window.innerWidth;
+	var canvasHeight = window.innerHeight - 0.1 * window.innerHeight;
+	ns.canvas.setAttribute('width', canvasWidth);
+	ns.canvas.setAttribute('height', canvasHeight);	
+	/* ...and css attributes via style properties */
+	ns.canvas.style.width = canvasWidth + "px";
+	ns.canvas.style.height = canvasHeight + "px";
 	
 	/* init properties */
 	ns.props = new ns.properties(4, 2, 1, 10);
-	ns.createFlakes(ns.props);
+	ns.drawControls();
+	ns.createFlakes();
 
-	//console.log(ns.flakes);
 	/* start animation */
 	ns.draw();
-	//window.requestAnimationFrame(ns.draw(ns.flakes, ns.props));
-	//ns.draw(ns.flakes, ns.props);
 	}
+
+ns.drawControls = function () {
+	$("#slider").slider();
+	$("#slider").slider({ step: 1 });
+	$("#slider").slider( "option", "min", 1 );
+	$("#slider").slider( "option", "max", 10 );
+	$("#slider").slider( "option", "value", 1 );
+
+	$("#slider").slider({
+		change: function( event, ui ) {}
+	});
+	$("#slider" ).on( "slidechange", function(event, slider){ ns.props.setFlakesPerRound($( "#slider" ).slider( "value" )); });
+}	
 
 ns.flake = function (x, y, velocity){
 
@@ -34,9 +71,7 @@ ns.flake = function (x, y, velocity){
 	this.velocity = velocity;
 		
 	this.move = function() {
-		//console.log("move() called");
 		this.y = this.y + this.velocity;
-		//console.log("move() called " + this.y);
 		}
 	this.getY = function() {
 		return this.y;
@@ -67,10 +102,12 @@ ns.properties = function (maxVelocity, minVelocity, flakesPerRound, minRate) {
 	
 	/* flakes per addition */
 	this.setFlakesPerRound = function (flakeAmount) {
-		flakesPerRound = flakeAmount;
+		ns.slider.innerHTML = $( "#slider" ).slider( "value" );
+		//alert("vaihto");
+		this.flakesPerRound = flakeAmount;
 	}
 	this.getFlakesPerRound = function () {
-		return flakesPerRound;
+		return this.flakesPerRound;
 	}
 	
 	/* minimum rate */
@@ -99,6 +136,8 @@ ns.properties = function (maxVelocity, minVelocity, flakesPerRound, minRate) {
 ns.updateFlakeCounter = function () {
 	ns.counter.innerHTML = ns.flakes.length;
 }
+
+/* remove flakes which have passed the bottom of canvas */
 ns.removeFlakes = function () {
 
 	var newFlakeArr = []
@@ -110,27 +149,36 @@ ns.removeFlakes = function () {
 	}	
 	ns.flakes = newFlakeArr;
 }
-
-ns.createFlakes = function (props) {
-	for (var i = 0; i < props.getFlakesPerRound(); i++) {
-		var velocity = Math.random() * props.getMaxVelocity();
+/* create bunch of flakes per call */
+ns.createFlakes = function () {
+	for (var i = 0; i < ns.props.getFlakesPerRound(); i++) {
+		var velocity = Math.random() * ns.props.getMaxVelocity();
 		ns.flakes.push(new ns.flake(
 									Math.random() * ns.canvas.width, 
 									-2, 
-									(velocity > props.getMinVelocity()) ? velocity : velocity + props.getMinVelocity()));
+									(velocity > ns.props.getMinVelocity()) ? velocity : velocity + ns.props.getMinVelocity()));
 	}
 }
 
+/*
+ * Actions:
+ * - updates flake objects (movement)
+ * - creates new flakes
+ * - removes flakes that passed bottom of the canvas
+ * - updates flake counter
+ * - does the actual drawing to canvas. 
+ * Frame rate control implementation taken from here:
+ * http://codetheory.in/controlling-the-frame-rate-with-requestanimationframe/
+ */
 ns.draw = function () {
 
-    now = Date.now();
-    delta = now - then;
+    ns.now = Date.now();
+    ns.delta = ns.now - ns.then;
      
-    if (delta > interval) {
-		console.log("hep");
-        then = now - (delta % interval);
+    if (ns.delta > ns.interval) {
+        then = ns.now - (ns.delta % ns.interval);
 		ns.removeFlakes();
-		ns.createFlakes(ns.props);
+		ns.createFlakes();
 		ns.updateFlakeCounter();
 		ns.ctx.clearRect(0, 0, ns.canvas.width, ns.canvas.height);
 		for (var i = 0; i < ns.flakes.length; i++) {
