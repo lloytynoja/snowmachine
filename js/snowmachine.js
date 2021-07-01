@@ -185,7 +185,7 @@ ns.draw = function () {
 			ns.flakes[i].move();
 			ns.ctx.beginPath();
 			ns.ctx.arc(ns.flakes[i].getX(), ns.flakes[i].getY(), 4, 0, 2 * Math.PI, false);
-			ns.ctx.fillStyle = 'yellow';
+			ns.ctx.fillStyle = 'white';
 			ns.ctx.fill();
 		}
 	}
